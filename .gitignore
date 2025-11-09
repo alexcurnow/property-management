@@ -1,0 +1,391 @@
+##############################################################################
+# .NET / C# / ASP.NET Core
+##############################################################################
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+.idea_modules/
+
+# MonoDevelop/Xamarin Studio
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+[Dd]ebugPS/
+[Rr]eleasePS/
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+# NuGet v3's project.json files
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# StyleCop
+StyleCopReport.xml
+
+# Files built by Visual Studio
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.tlog
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Chutzpah Test files
+_Chutzpah*
+
+# Benchmark Results
+BenchmarkDotNet.Artifacts/
+
+# .NET Core publish output
+publish/
+
+# Entity Framework Core
+*.mdf
+*.ldf
+*.ndf
+
+# Entity Framework Migrations
+**/Migrations/*.cs
+!**/Migrations/*Configuration.cs
+
+##############################################################################
+# Docker
+##############################################################################
+
+# Docker volumes
+**/data/
+**/postgres-data/
+**/.postgres/
+
+# Docker override files
+docker-compose.override.yml
+docker-compose.*.yml
+!docker-compose.yml
+
+# Docker temporary files
+.dockerignore.backup
+
+##############################################################################
+# Database
+##############################################################################
+
+# SQL Server database files
+*.mdf
+*.ldf
+*.ndf
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# PostgreSQL
+*.backup
+*.dump
+
+##############################################################################
+# Secrets & Environment Variables
+##############################################################################
+
+# User secrets
+# Note: appsettings.Development.json should be committed with safe defaults
+# Use appsettings.Development.local.json for local secrets/overrides
+appsettings.*.local.json
+appsettings.Local.json
+secrets.json
+**/secrets/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Certificate files
+*.pfx
+*.p12
+*.cer
+*.crt
+*.key
+*.pem
+
+##############################################################################
+# Operating System Files
+##############################################################################
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+##############################################################################
+# IDEs and Editors
+##############################################################################
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+##############################################################################
+# Logs and Temporary Files
+##############################################################################
+
+# Application logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+##############################################################################
+# Node.js (if using npm for frontend tooling)
+##############################################################################
+
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+##############################################################################
+# Build Tools
+##############################################################################
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# Cake
+tools/**
+!tools/packages.config
+
+# Paket
+.paket/paket.exe
+paket-files/
+
+##############################################################################
+# Azure / Cloud
+##############################################################################
+
+# Azure Functions
+local.settings.json
+
+# Azure DevOps
+.azure-pipelines/
+
+##############################################################################
+# Misc
+##############################################################################
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Coverage reports
+coverage/
+*.coverage
+*.coveragexml
+
+# SonarQube
+.sonarqube/
+
+# JetBrains dotTrace / dotMemory
+*.dotTrace
+*.dotMemory
+
+# Local History for Visual Studio
+.localhistory/
+
+# BeatPulse health check temp db
+healthchecksdb
+
+# Backup folder for Package Reference Convert tool
+MigrationBackup/
+
+# Ionide (F# VS Code plugin) working folder
+.ionide/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Fody - auto-generated XML schema
+FodyWeavers.xsd
+
+##############################################################################
+# Project-Specific
+##############################################################################
+
+# wwwroot/lib - managed by LibMan or similar
+**/wwwroot/lib/
+
+# Build artifacts
+**/publish/
+**/PublishProfiles/
+
+# Database snapshots
+*.dacpac
+
+# Package files
+*.nupkg
+*.snupkg

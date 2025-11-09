@@ -1,0 +1,87 @@
+@page "/"
+@using MudBlazor
+
+<PageTitle>Dashboard - Property Management System</PageTitle>
+
+<MudText Typo="Typo.h3" Class="mb-4">Maintenance Operations Dashboard</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudText Typo="Typo.h6" Color="Color.Primary">Open Work Orders</MudText>
+            <MudText Typo="Typo.h3">0</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Active maintenance requests</MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudText Typo="Typo.h6" Color="Color.Error">Emergency Requests</MudText>
+            <MudText Typo="Typo.h3">0</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Requiring immediate attention</MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudText Typo="Typo.h6" Color="Color.Success">Completed Today</MudText>
+            <MudText Typo="Typo.h3">0</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Work orders finished</MudText>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudText Typo="Typo.h6" Color="Color.Info">Scheduled</MudText>
+            <MudText Typo="Typo.h3">0</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Upcoming maintenance</MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudPaper Elevation="2" Class="pa-4 mt-6">
+    <MudText Typo="Typo.h5" Class="mb-4">Welcome to the Property Management System</MudText>
+    <MudText Typo="Typo.body1" Class="mb-4">
+        This application demonstrates Domain-Driven Design (DDD), Command Query Responsibility Segregation (CQRS),
+        Event-Driven Architecture, and Vertical Slice Architecture principles.
+    </MudText>
+
+    <MudText Typo="Typo.h6" Class="mb-2">Key Features:</MudText>
+    <MudList T="string" Dense="true">
+        <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle">
+            <strong>Rich Domain Models:</strong> Encapsulated business logic with private setters and validation
+        </MudListItem>
+        <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle">
+            <strong>CQRS with MediatR:</strong> Separated command and query responsibilities
+        </MudListItem>
+        <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle">
+            <strong>Vertical Slice Architecture:</strong> Features organized by business capability
+        </MudListItem>
+        <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle">
+            <strong>State Management:</strong> Fluxor for optimistic updates and reactive UI
+        </MudListItem>
+        <MudListItem T="string" Icon="@Icons.Material.Filled.CheckCircle">
+            <strong>Domain Events:</strong> Event-driven communication between aggregates
+        </MudListItem>
+    </MudList>
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6" Class="mb-2">Quick Actions:</MudText>
+    <MudStack Row="true" Class="mt-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/maintenance-requests/submit"
+                   StartIcon="@Icons.Material.Filled.Add">
+            Submit Maintenance Request
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/maintenance-requests/review"
+                   StartIcon="@Icons.Material.Filled.List">
+            View All Requests
+        </MudButton>
+    </MudStack>
+</MudPaper>
+
+@code {
+    // Dashboard showing overview of maintenance operations
+    // TODO: Load real statistics from database
+    // TODO: Add real-time updates using SignalR
+}

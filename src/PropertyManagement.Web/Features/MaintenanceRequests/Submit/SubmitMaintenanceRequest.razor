@@ -1,0 +1,209 @@
+@page "/maintenance-requests/submit"
+@using Fluxor
+@using MudBlazor
+@using PropertyManagement.Web.Shared.State
+@using PropertyManagement.Web.Domain.Properties
+@using Microsoft.EntityFrameworkCore
+@using PropertyManagement.Web.Infrastructure.Persistence
+@inject IState<MaintenanceState> MaintenanceState
+@inject IDispatcher Dispatcher
+@inject PropertyManagementDbContext DbContext
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<PageTitle>Submit Maintenance Request</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+    <MudPaper Elevation="2" Class="pa-6">
+        <MudText Typo="Typo.h4" Class="mb-4">Submit Maintenance Request</MudText>
+        <MudText Typo="Typo.body2" Class="mb-6">
+            Report maintenance issues for your property. Emergency requests will be prioritized immediately.
+        </MudText>
+
+        <MudForm @ref="_form" @bind-IsValid="@_isFormValid">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSelect T="Guid?" @bind-Value="@_selectedPropertyId" Label="Property" Required="true"
+                               Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var property in _properties)
+                        {
+                            <MudSelectItem Value="@property.Id">@property.Name - @property.Address.City</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                @if (_selectedPropertyId.HasValue && _units.Any())
+                {
+                    <MudItem xs="12">
+                        <MudSelect T="Guid?" @bind-Value="@_selectedUnitId" Label="Unit (Optional)"
+                                   Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Clearable="true">
+                            @foreach (var unit in _units)
+                            {
+                                <MudSelectItem Value="@((Guid?)unit.Id)">Unit @unit.UnitNumber</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+
+                <MudItem xs="12">
+                    <MudSelect T="string" @bind-Value="@_urgencyLevel" Label="Urgency Level" Required="true"
+                               Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                        <MudSelectItem Value="@("Low")">
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small">Low</MudChip> - Can wait several days
+                        </MudSelectItem>
+                        <MudSelectItem Value="@("Medium")">
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small">Medium</MudChip> - Should be addressed within 2-3 days
+                        </MudSelectItem>
+                        <MudSelectItem Value="@("High")">
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small">High</MudChip> - Needs attention within 24 hours
+                        </MudSelectItem>
+                        <MudSelectItem Value="@("Emergency")">
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small">Emergency</MudChip> - Immediate response required
+                        </MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="@_description" Label="Description" Required="true"
+                                  Lines="5" Variant="Variant.Outlined"
+                                  Counter="1000" MaxLength="1000"
+                                  HelperText="Please provide detailed information about the maintenance issue (minimum 10 characters)" />
+                </MudItem>
+
+                <MudItem xs="12" Class="d-flex gap-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               OnClick="@SubmitRequest"
+                               Disabled="@(!_isFormValid || MaintenanceState.Value.IsSubmitting)"
+                               StartIcon="@Icons.Material.Filled.Send">
+                        @if (MaintenanceState.Value.IsSubmitting)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            <span class="ml-2">Submitting...</span>
+                        }
+                        else
+                        {
+                            <span>Submit Request</span>
+                        }
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="@Reset">
+                        Reset
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+
+        @if (!string.IsNullOrEmpty(MaintenanceState.Value.LastError))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">
+                @MaintenanceState.Value.LastError
+            </MudAlert>
+        }
+
+        @if (MaintenanceState.Value.PendingWorkOrders.Any(wo => wo.IsOptimistic))
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+                <MudText>Your request is being processed...</MudText>
+            </MudAlert>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm? _form;
+    private bool _isFormValid;
+
+    private Guid? _selectedPropertyId;
+    private Guid? _selectedUnitId;
+    private string _urgencyLevel = "Medium";
+    private string _description = string.Empty;
+
+    private List<Property> _properties = new();
+    private List<Unit> _units = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProperties();
+
+        // TODO: Implement optimistic update with Fluxor
+        // Subscribe to state changes to show success message
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_selectedPropertyId.HasValue)
+        {
+            await LoadUnitsForProperty(_selectedPropertyId.Value);
+        }
+    }
+
+    private async Task LoadProperties()
+    {
+        _properties = await DbContext.Properties
+            .OrderBy(p => p.Name)
+            .ToListAsync();
+    }
+
+    private async Task LoadUnitsForProperty(Guid propertyId)
+    {
+        _units = await DbContext.Units
+            .Where(u => u.PropertyId == propertyId)
+            .OrderBy(u => u.UnitNumber)
+            .ToListAsync();
+    }
+
+    private async Task SubmitRequest()
+    {
+        if (!_isFormValid || !_selectedPropertyId.HasValue)
+            return;
+
+        // Validate minimum description length
+        if (_description.Length < 10)
+        {
+            Snackbar.Add("Description must be at least 10 characters", Severity.Error);
+            return;
+        }
+
+        // Dispatch Fluxor action for optimistic update
+        var action = new SubmitMaintenanceRequestAction(
+            _selectedPropertyId.Value,
+            _selectedUnitId,
+            _description,
+            _urgencyLevel);
+
+        Dispatcher.Dispatch(action);
+
+        // Wait a moment to see if submission succeeds
+        await Task.Delay(500);
+
+        if (MaintenanceState.Value.LastSubmittedWorkOrderId.HasValue)
+        {
+            Snackbar.Add("Maintenance request submitted successfully!", Severity.Success);
+            Reset();
+        }
+    }
+
+    private void Reset()
+    {
+        _selectedPropertyId = null;
+        _selectedUnitId = null;
+        _urgencyLevel = "Medium";
+        _description = string.Empty;
+        _units.Clear();
+        _form?.ResetAsync();
+    }
+
+    private async Task OnPropertyChanged(Guid? propertyId)
+    {
+        _selectedPropertyId = propertyId;
+        _selectedUnitId = null;
+
+        if (propertyId.HasValue)
+        {
+            await LoadUnitsForProperty(propertyId.Value);
+        }
+        else
+        {
+            _units.Clear();
+        }
+    }
+}

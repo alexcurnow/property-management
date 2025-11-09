@@ -1,0 +1,48 @@
+@using MudBlazor
+
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">
+        Dashboard
+    </MudNavLink>
+
+    <MudNavGroup Title="Maintenance Requests" Icon="@Icons.Material.Filled.Build" Expanded="true">
+        <MudNavLink Href="/maintenance-requests/submit" Icon="@Icons.Material.Filled.Add">
+            Submit Request
+        </MudNavLink>
+        <MudNavLink Href="/maintenance-requests/review" Icon="@Icons.Material.Filled.Reviews">
+            Review Requests
+        </MudNavLink>
+        <MudNavLink Href="/maintenance-requests/assign" Icon="@Icons.Material.Filled.Assignment">
+            Assign Work Orders
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="Preventive Maintenance" Icon="@Icons.Material.Filled.Schedule">
+        <MudNavLink Href="/preventive-maintenance/schedule" Icon="@Icons.Material.Filled.CalendarMonth">
+            Schedule Maintenance
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="Vendor Management" Icon="@Icons.Material.Filled.People">
+        <MudNavLink Href="/vendor-assignments/complete" Icon="@Icons.Material.Filled.CheckCircle">
+            Complete Work Orders
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudDivider Class="my-2" />
+
+    <MudNavLink Href="/properties" Icon="@Icons.Material.Filled.Apartment">
+        Properties
+    </MudNavLink>
+    <MudNavLink Href="/vendors" Icon="@Icons.Material.Filled.Business">
+        Vendors
+    </MudNavLink>
+    <MudNavLink Href="/reports" Icon="@Icons.Material.Filled.Analytics">
+        Reports
+    </MudNavLink>
+</MudNavMenu>
+
+@code {
+    // Navigation menu for the Property Management System
+    // Organized by business capability following vertical slice architecture
+}
