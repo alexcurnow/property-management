@@ -125,7 +125,6 @@ public class MaintenanceEffects
     {
         try
         {
-            // TODO: Implement optimistic update with Fluxor
             var command = new SubmitMaintenanceRequestCommand
             {
                 PropertyId = action.PropertyId,

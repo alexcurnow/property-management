@@ -1,7 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using PropertyManagement.Web.Domain.WorkOrders;
+using PropertyManagement.Web.Features.MaintenanceRequests.Submit.Models;
 using PropertyManagement.Web.Infrastructure.Persistence;
 
 namespace PropertyManagement.Web.Features.MaintenanceRequests.Submit;
@@ -79,11 +79,6 @@ public class SubmitMaintenanceRequestValidator : AbstractValidator<SubmitMainten
             .WithMessage("Urgency level is required")
             .Must(BeValidUrgencyLevel)
             .WithMessage("Urgency level must be Low, Medium, High, or Emergency");
-
-        // TODO: Add additional validation rules
-        // - Validate property exists in database
-        // - Validate unit exists if UnitId is provided
-        // - Business hours validation for non-emergency requests
     }
 
     private bool BeValidUrgencyLevel(string urgencyLevel)
@@ -94,7 +89,7 @@ public class SubmitMaintenanceRequestValidator : AbstractValidator<SubmitMainten
 }
 
 // ============================================================================
-// HANDLER
+// HANDLER - This is the heart of the vertical slice
 // ============================================================================
 
 public class SubmitMaintenanceRequestHandler
@@ -117,8 +112,8 @@ public class SubmitMaintenanceRequestHandler
     {
         try
         {
-            // Verify property exists
-            var propertyExists = await _context.Properties
+            // Verify property exists using this slice's Property model
+            var propertyExists = await _context.Set<Property>()
                 .AnyAsync(p => p.Id == request.PropertyId, cancellationToken);
 
             if (!propertyExists)
@@ -127,10 +122,10 @@ public class SubmitMaintenanceRequestHandler
                     "Property not found");
             }
 
-            // Verify unit exists if specified
+            // Verify unit exists if specified using this slice's Unit model
             if (request.UnitId.HasValue)
             {
-                var unitExists = await _context.Units
+                var unitExists = await _context.Set<Models.Unit>()
                     .AnyAsync(u => u.Id == request.UnitId.Value && u.PropertyId == request.PropertyId,
                         cancellationToken);
 
@@ -141,28 +136,27 @@ public class SubmitMaintenanceRequestHandler
                 }
             }
 
-            // Convert urgency level to priority
-            // This should never hit the default case due to FluentValidation,
-            // but we throw to catch any programming errors
-            var priority = request.UrgencyLevel switch
+            // Convert urgency level to priority using this slice's logic
+            var priority = WorkOrderPriority.FromUrgency(request.UrgencyLevel);
+
+            // Create work order using THIS slice's WorkOrder model
+            // No complex domain logic - just create the entity
+            var workOrder = new WorkOrder
             {
-                "Low" => WorkOrderPriority.Low,
-                "Medium" => WorkOrderPriority.Medium,
-                "High" => WorkOrderPriority.High,
-                "Emergency" => WorkOrderPriority.Emergency,
-                _ => throw new InvalidOperationException(
-                    $"Invalid urgency level: {request.UrgencyLevel}. This should have been caught by validation.")
+                Id = Guid.NewGuid(),
+                PropertyId = request.PropertyId,
+                UnitId = request.UnitId,
+                Description = request.Description,
+                Status = "New",
+                PriorityLevel = priority.Level,
+                PriorityName = priority.Name,
+                EstimatedCostAmount = 0,
+                EstimatedCostCurrency = "USD",
+                CreatedAt = DateTime.UtcNow
             };
 
-            // Create work order aggregate using domain logic
-            var workOrder = WorkOrder.Create(
-                request.PropertyId,
-                request.UnitId,
-                request.Description,
-                priority);
-
-            // Domain rule: Emergency work orders bypass normal scheduling
-            if (workOrder.RequiresImmediateAttention())
+            // Business rule: Log emergency work orders
+            if (priority.Level == 4)
             {
                 _logger.LogWarning(
                     "Emergency work order created: {WorkOrderId} for property {PropertyId}",
@@ -171,17 +165,12 @@ public class SubmitMaintenanceRequestHandler
             }
 
             // Persist to database
-            _context.WorkOrders.Add(workOrder);
+            _context.Set<WorkOrder>().Add(workOrder);
             await _context.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation(
                 "Work order {WorkOrderId} created successfully",
                 workOrder.Id);
-
-            // TODO: Add domain event publishing here
-            // - Publish WorkOrderCreatedEvent
-            // - Trigger notifications (email, SMS)
-            // - Update real-time dashboard
 
             return SubmitMaintenanceRequestResponse.SuccessResult(workOrder.Id);
         }

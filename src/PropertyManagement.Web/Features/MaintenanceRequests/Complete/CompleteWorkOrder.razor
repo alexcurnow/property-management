@@ -1,33 +1,33 @@
-@page "/maintenance-requests/assign"
+@page "/maintenance-requests/complete"
 @using MediatR
 @using MudBlazor
-@using PropertyManagement.Web.Features.MaintenanceRequests.Assign
-@using PropertyManagement.Web.Features.MaintenanceRequests.Assign.Models
+@using PropertyManagement.Web.Features.MaintenanceRequests.Complete
+@using PropertyManagement.Web.Features.MaintenanceRequests.Complete.Models
 @using Microsoft.EntityFrameworkCore
 @using PropertyManagement.Web.Infrastructure.Persistence
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject PropertyManagementDbContext DbContext
 
-<PageTitle>Assign Work Orders</PageTitle>
+<PageTitle>Complete Work Orders</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
-    <MudText Typo="Typo.h4" Class="mb-4">Assign Work Orders to Vendors</MudText>
+    <MudText Typo="Typo.h4" Class="mb-4">Complete Work Orders</MudText>
 
     <MudGrid>
-        <!-- Unassigned Work Orders Panel -->
+        <!-- Assigned Work Orders Panel -->
         <MudItem xs="12" md="6">
             <MudPaper Elevation="2" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-4">Unassigned Work Orders</MudText>
+                <MudText Typo="Typo.h6" Class="mb-4">In-Progress Work Orders</MudText>
 
                 @if (_isLoadingWorkOrders)
                 {
                     <MudProgressCircular Indeterminate="true" Size="Size.Small" />
                 }
-                else if (_unassignedWorkOrders.Any())
+                else if (_assignedWorkOrders.Any())
                 {
                     <MudList T="string">
-                        @foreach (var workOrder in _unassignedWorkOrders)
+                        @foreach (var workOrder in _assignedWorkOrders)
                         {
                             <MudListItem T="string" OnClick="@(() => SelectWorkOrder(workOrder))"
                                          Class="@(_selectedWorkOrder?.Id == workOrder.Id ? "mud-theme-primary" : "")">
@@ -41,7 +41,7 @@
                                     @(workOrder.Description.Length > 60 ? workOrder.Description.Substring(0, 60) + "..." : workOrder.Description)
                                 </MudText>
                                 <MudText Typo="Typo.caption">
-                                    Created: @workOrder.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                                    Vendor: @workOrder.Vendor?.Name | Estimated: $@workOrder.EstimatedCostAmount.ToString("N2")
                                 </MudText>
                             </MudListItem>
                             <MudDivider />
@@ -50,20 +50,20 @@
                 }
                 else
                 {
-                    <MudAlert Severity="Severity.Info">No unassigned work orders</MudAlert>
+                    <MudAlert Severity="Severity.Info">No work orders in progress</MudAlert>
                 }
             </MudPaper>
         </MudItem>
 
-        <!-- Vendor Assignment Panel -->
+        <!-- Completion Form Panel -->
         <MudItem xs="12" md="6">
             <MudPaper Elevation="2" Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-4">Assign to Vendor</MudText>
+                <MudText Typo="Typo.h6" Class="mb-4">Mark as Completed</MudText>
 
                 @if (_selectedWorkOrder == null)
                 {
                     <MudAlert Severity="Severity.Info">
-                        Select a work order from the left to assign it to a vendor
+                        Select a work order from the left to mark it as completed
                     </MudAlert>
                 }
                 else
@@ -77,39 +77,49 @@
                             <strong>Description:</strong> @_selectedWorkOrder.Description
                         </MudText>
                         <MudText Typo="Typo.caption">
-                            <strong>Priority:</strong>
-                            <MudChip T="string" Color="@GetPriorityColor(_selectedWorkOrder.PriorityName)" Size="Size.Small">
-                                @_selectedWorkOrder.PriorityName
-                            </MudChip>
+                            <strong>Vendor:</strong> @_selectedWorkOrder.Vendor?.Name
+                        </MudText>
+                        <MudText Typo="Typo.caption">
+                            <strong>Estimated Cost:</strong> $@_selectedWorkOrder.EstimatedCostAmount.ToString("N2")
                         </MudText>
                     </MudPaper>
 
                     <MudForm @ref="_form" @bind-IsValid="@_isFormValid">
-                        <MudSelect T="Guid?" @bind-Value="@_selectedVendorId" Label="Select Vendor" Required="true"
-                                   Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-                            @foreach (var vendor in _vendors)
+                        <MudTextField @bind-Value="@_completionNotes" Label="Completion Notes" Required="true"
+                                      Lines="5" Variant="Variant.Outlined"
+                                      Counter="2000" MaxLength="2000"
+                                      HelperText="Describe what work was completed (minimum 10 characters)" />
+
+                        <MudNumericField T="decimal" @bind-Value="@_actualCost" Label="Actual Cost" Required="true"
+                                         Variant="Variant.Outlined" Min="0" Class="mt-4"
+                                         HelperText="Enter the final cost of the work" />
+
+                        @if (_actualCost > 0 && _selectedWorkOrder.EstimatedCostAmount > 0)
+                        {
+                            var difference = _actualCost - _selectedWorkOrder.EstimatedCostAmount;
+                            var percentage = (difference / _selectedWorkOrder.EstimatedCostAmount) * 100;
+
+                            @if (Math.Abs(percentage) > 20)
                             {
-                                <MudSelectItem Value="@((Guid?)vendor.Id)">
-                                    @vendor.Name (@vendor.Specialization)
-                                </MudSelectItem>
+                                <MudAlert Severity="@(percentage > 0 ? Severity.Warning : Severity.Success)" Class="mt-2">
+                                    Actual cost is @(percentage > 0 ? "over" : "under") estimate by $@Math.Abs(difference).ToString("N2") (@percentage.ToString("N1")%)
+                                </MudAlert>
                             }
-                        </MudSelect>
+                        }
 
-                        <MudNumericField T="decimal?" @bind-Value="@_estimatedCost" Label="Estimated Cost (Optional)"
-                                         Variant="Variant.Outlined" Min="0" Class="mt-4" />
-
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4"
-                                   OnClick="@AssignWorkOrder"
-                                   Disabled="@(!_isFormValid || _isAssigning)"
-                                   FullWidth="true">
-                            @if (_isAssigning)
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" Class="mt-4"
+                                   OnClick="@CompleteWorkOrderAsync"
+                                   Disabled="@(!_isFormValid || _isCompleting)"
+                                   FullWidth="true"
+                                   StartIcon="@Icons.Material.Filled.CheckCircle">
+                            @if (_isCompleting)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                <span class="ml-2">Assigning...</span>
+                                <span class="ml-2">Completing...</span>
                             }
                             else
                             {
-                                <span>Assign Work Order</span>
+                                <span>Mark as Completed</span>
                             }
                         </MudButton>
                     </MudForm>
@@ -124,33 +134,30 @@
     private bool _isFormValid;
 
     private bool _isLoadingWorkOrders = true;
-    private bool _isAssigning = false;
+    private bool _isCompleting = false;
 
-    private List<WorkOrder> _unassignedWorkOrders = new();
-    private List<Vendor> _vendors = new();
-
+    private List<WorkOrder> _assignedWorkOrders = new();
     private WorkOrder? _selectedWorkOrder;
-    private Guid? _selectedVendorId;
-    private decimal? _estimatedCost;
+
+    private string _completionNotes = string.Empty;
+    private decimal _actualCost = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.WhenAll(
-            LoadUnassignedWorkOrders(),
-            LoadVendors()
-        );
+        await LoadAssignedWorkOrders();
     }
 
-    private async Task LoadUnassignedWorkOrders()
+    private async Task LoadAssignedWorkOrders()
     {
         try
         {
             _isLoadingWorkOrders = true;
-            _unassignedWorkOrders = await DbContext.Set<WorkOrder>()
+            _assignedWorkOrders = await DbContext.Set<WorkOrder>()
                 .Include(w => w.Property)
-                .Where(w => w.AssignedVendorId == null)
+                .Include(w => w.Vendor)
+                .Where(w => w.AssignedVendorId != null && w.Status == "Assigned")
                 .OrderByDescending(w => w.PriorityLevel)
-                .ThenBy(w => w.CreatedAt)
+                .ThenBy(w => w.AssignedAt)
                 .ToListAsync();
         }
         catch (Exception ex)
@@ -163,57 +170,48 @@
         }
     }
 
-    private async Task LoadVendors()
-    {
-        try
-        {
-            _vendors = await DbContext.Set<Vendor>()
-                .Where(v => v.IsActive)
-                .OrderBy(v => v.Name)
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error loading vendors: {ex.Message}", Severity.Error);
-        }
-    }
-
     private void SelectWorkOrder(WorkOrder workOrder)
     {
         _selectedWorkOrder = workOrder;
-        _selectedVendorId = null;
-        _estimatedCost = null;
+        _completionNotes = string.Empty;
+        _actualCost = workOrder.EstimatedCostAmount; // Default to estimated cost
         StateHasChanged();
     }
 
-    private async Task AssignWorkOrder()
+    private async Task CompleteWorkOrderAsync()
     {
-        if (_selectedWorkOrder == null || !_selectedVendorId.HasValue)
+        if (_selectedWorkOrder == null || !_isFormValid)
             return;
+
+        // Validate minimum notes length
+        if (_completionNotes.Length < 10)
+        {
+            Snackbar.Add("Completion notes must be at least 10 characters", Severity.Error);
+            return;
+        }
 
         try
         {
-            _isAssigning = true;
+            _isCompleting = true;
 
-            var command = new AssignMaintenanceRequestCommand
+            var command = new CompleteWorkOrderCommand
             {
                 WorkOrderId = _selectedWorkOrder.Id,
-                VendorId = _selectedVendorId.Value,
-                EstimatedCost = _estimatedCost
+                CompletionNotes = _completionNotes,
+                ActualCost = _actualCost
             };
 
             var response = await Mediator.Send(command);
 
             if (response.Success)
             {
-                var vendor = _vendors.FirstOrDefault(v => v.Id == _selectedVendorId.Value);
-                Snackbar.Add($"Work order assigned to {vendor?.Name} successfully!", Severity.Success);
+                Snackbar.Add("Work order marked as completed successfully!", Severity.Success);
 
                 // Remove from list and reset selection
-                _unassignedWorkOrders.Remove(_selectedWorkOrder);
+                _assignedWorkOrders.Remove(_selectedWorkOrder);
                 _selectedWorkOrder = null;
-                _selectedVendorId = null;
-                _estimatedCost = null;
+                _completionNotes = string.Empty;
+                _actualCost = 0;
             }
             else
             {
@@ -225,11 +223,11 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error assigning work order: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error completing work order: {ex.Message}", Severity.Error);
         }
         finally
         {
-            _isAssigning = false;
+            _isCompleting = false;
         }
     }
 

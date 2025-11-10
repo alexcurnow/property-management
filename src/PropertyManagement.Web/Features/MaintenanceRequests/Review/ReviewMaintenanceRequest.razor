@@ -1,5 +1,9 @@
 @page "/maintenance-requests/review"
+@using MediatR
 @using MudBlazor
+@using PropertyManagement.Web.Features.MaintenanceRequests.Review
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
 
 <PageTitle>Review Maintenance Requests</PageTitle>
 
@@ -7,18 +11,97 @@
     <MudText Typo="Typo.h4" Class="mb-4">Review Maintenance Requests</MudText>
 
     <MudPaper Elevation="2" Class="pa-6">
-        <MudText Typo="Typo.body1" Color="Color.Secondary">
-            This feature will display all maintenance requests for review.
-        </MudText>
-        <MudText Typo="Typo.body2" Class="mt-4">
-            TODO: Implement query to fetch all work orders with filtering and sorting options.
-        </MudText>
+        @if (_isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+            <MudText Typo="Typo.body2" Class="ml-4">Loading work orders...</MudText>
+        }
+        else if (_workOrders.Any())
+        {
+            <MudTable T="WorkOrderReviewDto" Items="@_workOrders" Hover="true" Striped="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>Priority</MudTh>
+                    <MudTh>Property</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Created</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Priority">
+                        @{
+                            var priorityColor = context.Priority switch
+                            {
+                                "Emergency" => Color.Error,
+                                "High" => Color.Warning,
+                                "Medium" => Color.Info,
+                                _ => Color.Default
+                            };
+                        }
+                        <MudChip T="string" Color="@priorityColor" Size="Size.Small">@context.Priority</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Property">@context.PropertyName</MudTd>
+                    <MudTd DataLabel="Description">
+                        @if (context.Description.Length > 50)
+                        {
+                            <span>@context.Description.Substring(0, 50)...</span>
+                        }
+                        else
+                        {
+                            <span>@context.Description</span>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Color="Color.Info" Size="Size.Small">@context.Status</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Created">@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.AssignmentInd">
+                            Assign
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudText Typo="Typo.caption" Class="mt-4">
+                Showing @_workOrders.Count work order(s)
+            </MudText>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">
+                No pending maintenance requests to review.
+            </MudAlert>
+        }
     </MudPaper>
 </MudContainer>
 
 @code {
-    // TODO: Add additional validation rules
-    // TODO: Implement query handler for fetching work orders
-    // TODO: Add filtering by status, priority, property
-    // TODO: Add pagination
+    private bool _isLoading = true;
+    private List<WorkOrderReviewDto> _workOrders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWorkOrders();
+    }
+
+    private async Task LoadWorkOrders()
+    {
+        try
+        {
+            _isLoading = true;
+            var query = new ReviewMaintenanceRequestsQuery();
+            var response = await Mediator.Send(query);
+            _workOrders = response.WorkOrders;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading work orders: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
 }

@@ -2,7 +2,7 @@
 @using Fluxor
 @using MudBlazor
 @using PropertyManagement.Web.Shared.State
-@using PropertyManagement.Web.Domain.Properties
+@using PropertyManagement.Web.Features.MaintenanceRequests.Submit.Models
 @using Microsoft.EntityFrameworkCore
 @using PropertyManagement.Web.Infrastructure.Persistence
 @inject IState<MaintenanceState> MaintenanceState
@@ -27,7 +27,7 @@
                                Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
                         @foreach (var property in _properties)
                         {
-                            <MudSelectItem Value="@property.Id">@property.Name - @property.Address.City</MudSelectItem>
+                            <MudSelectItem Value="@property.Id">@property.Name</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
@@ -138,14 +138,14 @@
 
     private async Task LoadProperties()
     {
-        _properties = await DbContext.Properties
+        _properties = await DbContext.Set<Property>()
             .OrderBy(p => p.Name)
             .ToListAsync();
     }
 
     private async Task LoadUnitsForProperty(Guid propertyId)
     {
-        _units = await DbContext.Units
+        _units = await DbContext.Set<Unit>()
             .Where(u => u.PropertyId == propertyId)
             .OrderBy(u => u.UnitNumber)
             .ToListAsync();

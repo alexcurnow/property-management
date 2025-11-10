@@ -2,8 +2,7 @@ using FluentValidation;
 using Fluxor;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
-using PropertyManagement.Web.Domain.Services;
-using PropertyManagement.Web.Infrastructure.Behaviors;
+using PropertyManagement.Web.Common.Behaviors;
 using PropertyManagement.Web.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,9 +40,6 @@ builder.Services.AddFluxor(options =>
     // TODO: Install Fluxor.Blazor.Web.ReduxDevTools package to enable Redux DevTools
     // options.UseReduxDevTools(); // Enable Redux DevTools for debugging
 });
-
-// Domain Services
-builder.Services.AddScoped<WorkOrderSchedulingService>();
 
 // Logging
 builder.Services.AddLogging(logging =>

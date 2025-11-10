@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using PropertyManagement.Web.Domain.Properties;
-using PropertyManagement.Web.Domain.Scheduling;
-using PropertyManagement.Web.Domain.Vendors;
-using PropertyManagement.Web.Domain.WorkOrders;
 
 namespace PropertyManagement.Web.Infrastructure.Persistence;
 
+/// <summary>
+/// Application DbContext that aggregates configurations from all vertical slices
+/// Each feature registers its own entity configurations
+/// </summary>
 public class PropertyManagementDbContext : DbContext
 {
     public PropertyManagementDbContext(DbContextOptions<PropertyManagementDbContext> options)
@@ -13,18 +13,37 @@ public class PropertyManagementDbContext : DbContext
     {
     }
 
-    public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
-    public DbSet<Property> Properties => Set<Property>();
-    public DbSet<Unit> Units => Set<Unit>();
-    public DbSet<Vendor> Vendors => Set<Vendor>();
-    public DbSet<Technician> Technicians => Set<Technician>();
-    public DbSet<MaintenanceSchedule> MaintenanceSchedules => Set<MaintenanceSchedule>();
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply all configurations from the current assembly
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(PropertyManagementDbContext).Assembly);
+        // Apply configurations from all vertical slices
+        // Each slice owns its own entity configurations
+        ApplyConfigurationsFromSlices(modelBuilder);
+    }
+
+    private void ApplyConfigurationsFromSlices(ModelBuilder modelBuilder)
+    {
+        // Apply entity configurations from slices
+        // NOTE: In true VSA, each slice has its own models, but they map to shared tables.
+        // We only apply the configuration ONCE per table to avoid EF Core conflicts.
+        // The Submit slice has the most complete configuration, so we use that as the source.
+
+        // Submit Maintenance Request slice - provides base configurations
+        modelBuilder.ApplyConfiguration(
+            new Features.MaintenanceRequests.Submit.Database.WorkOrderConfiguration());
+        modelBuilder.ApplyConfiguration(
+            new Features.MaintenanceRequests.Submit.Database.PropertyConfiguration());
+        modelBuilder.ApplyConfiguration(
+            new Features.MaintenanceRequests.Submit.Database.UnitConfiguration());
+
+        // Assign Maintenance Request slice - adds Vendor table
+        modelBuilder.ApplyConfiguration(
+            new Features.MaintenanceRequests.Assign.Database.VendorConfiguration());
+
+        // Complete Work Order slice - uses same tables, no additional configs needed
+        // (WorkOrder, Property, Vendor already configured above)
+
+        // This is the ONLY place where slices "touch" - through the shared database
     }
 }

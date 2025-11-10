@@ -1,7 +1,8 @@
-namespace PropertyManagement.Web.Domain.Common;
+namespace PropertyManagement.Web.Common.ValueObjects;
 
 /// <summary>
-/// Value object representing a monetary amount with currency
+/// Universal value object for monetary amounts
+/// This is truly shared across ALL features
 /// </summary>
 public record Money
 {

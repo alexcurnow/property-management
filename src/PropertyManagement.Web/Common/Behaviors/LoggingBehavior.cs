@@ -1,9 +1,10 @@
 using MediatR;
 
-namespace PropertyManagement.Web.Infrastructure.Behaviors;
+namespace PropertyManagement.Web.Common.Behaviors;
 
 /// <summary>
 /// MediatR pipeline behavior that logs command/query execution
+/// Truly shared behavior across all vertical slices
 /// </summary>
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
